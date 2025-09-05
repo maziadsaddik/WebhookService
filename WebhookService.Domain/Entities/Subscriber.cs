@@ -33,7 +33,6 @@
         public DateTime CreatedAt { get; private set; }
         public DateTime? UpdatedAt { get; private set; }
 
-
         public static Subscriber Create(string tenantId, string endpointUrl, List<string> eventTypes, string secret) => new(
             tenantId: tenantId,
             endpointUrl: endpointUrl,

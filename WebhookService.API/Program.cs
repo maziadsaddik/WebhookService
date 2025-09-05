@@ -59,6 +59,41 @@ app.MapPost("/api/subscribers/{id}/rotate-secret", async (
  .WithName("Rotate secret")
  .WithOpenApi();
 
+// Get subscriber status
+//app.MapGet("/api/subscribers/{id}/status", async (
+//    Guid id,
+//    ISubscriberService service) =>
+//{
+//    var status = await service.GetStatusAsync(id);
+//    return Results.Ok(status);
+//})
+// .WithName("Subscriber status")
+// .WithOpenApi();
+
+// Ingest event
+app.MapPost("/api/events", async (
+    [FromBody] IngestEventInput input,
+    [FromHeader(Name = "X-Idempotency-Key")] string idempotencyKey,
+    IMediator mediator,
+    CancellationToken cancellationToken) =>
+{
+
+    IngestEventCommand command = new()
+    {
+        TenantId = input.TenantId,
+        EventType = input.EventType,
+        Payload = input.Payload,
+        IdempotencyKey = idempotencyKey
+    };
+    Event evt = await mediator.Send(command, cancellationToken);
+    return Results.Created($"/api/events/{evt.Id}", new { id = evt.Id });
+    // eventCounter.Inc();
+    // var evt = await service.IngestAsync(request, idempotencyKey);
+    //return Results.Created($"/api/events/{evt.Id}", new { id = evt.Id });
+})
+ .WithName("Ingest event")
+ .WithOpenApi();
+
 
 app.Run();
 
