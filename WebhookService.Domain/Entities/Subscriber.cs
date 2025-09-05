@@ -45,6 +45,13 @@
             updatedAt: null
         );
 
+        public void RotateSecret(string secret)
+        {
+            EncryptedSecret = secret;
+            KeyId = Guid.NewGuid().ToString();
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public virtual ICollection<Delivery> Deliveries { get; } = new List<Delivery>();
     }
 }

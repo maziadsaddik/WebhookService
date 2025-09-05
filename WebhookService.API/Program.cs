@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using WebhookService.API.Models.Inputs;
 using WebhookService.Appliaction.Dtos;
 using WebhookService.Appliaction.Extensions;
@@ -29,7 +30,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapPost("/api/subscribers", async (CreateSubscriberInput input, IMediator mediator, CancellationToken cancellationToken) =>
+app.MapPost("/api/subscribers", async ([FromBody] CreateSubscriberInput input, IMediator mediator, CancellationToken cancellationToken) =>
 {
     CreateSubscriberCommand command = new()
     {
@@ -43,6 +44,19 @@ app.MapPost("/api/subscribers", async (CreateSubscriberInput input, IMediator me
     return Results.Created($"/api/subscribers/{subscriber.Id}", subscriber);
 })
  .WithName("Create subscriber")
+ .WithOpenApi();
+
+app.MapPost("/api/subscribers/{id}/rotate-secret", async (
+    Guid id,
+    IMediator mediator,
+    CancellationToken cancellationToken
+) =>
+{
+    RotateSecretCommand command = new() { Id = id };
+    Subscriber subscriber = await mediator.Send(command, cancellationToken);
+    return Results.Ok(new { message = "Secret rotated successfully" });
+})
+ .WithName("Rotate secret")
  .WithOpenApi();
 
 
