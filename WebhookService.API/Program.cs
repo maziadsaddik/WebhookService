@@ -85,14 +85,40 @@ app.MapPost("/api/events", async (
         Payload = input.Payload,
         IdempotencyKey = idempotencyKey
     };
-    Event evt = await mediator.Send(command, cancellationToken);
-    return Results.Created($"/api/events/{evt.Id}", new { id = evt.Id });
+    string eventId = await mediator.Send(command, cancellationToken);
+    return Results.Created($"/api/events/{eventId}", new { id = eventId });
     // eventCounter.Inc();
     // var evt = await service.IngestAsync(request, idempotencyKey);
     //return Results.Created($"/api/events/{evt.Id}", new { id = evt.Id });
 })
  .WithName("Ingest event")
  .WithOpenApi();
+
+// Get deliveries
+app.MapGet("/api/deliveries", async (
+    [FromQuery] Guid? eventId,
+    [FromQuery] Guid? subscriberId,
+    [FromQuery] string status,
+    IMediator mediator,
+    CancellationToken cancellationToken,
+    [FromQuery] int currentPage = 1,
+    [FromQuery] int pageSize = 20
+) =>
+{
+    GetDeliveriesQuery query = new()
+    {
+        EventId = eventId,
+        SubscriberId = subscriberId,
+        Status = status,
+        CurrentPage = currentPage,
+        PageSize = pageSize
+    };
+
+    var (deliveries, totalPage) = await mediator.Send(query, cancellationToken);
+
+    return Results.Ok(new { items = deliveries, totalPage = totalPage, pageSize = pageSize, currentPage });
+});
+
 
 
 app.Run();

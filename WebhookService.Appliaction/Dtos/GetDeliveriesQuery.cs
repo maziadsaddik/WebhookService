@@ -3,7 +3,7 @@ using WebhookService.Domain.Entities;
 
 namespace WebhookService.Appliaction.Dtos
 {
-    public class GetDeliveriesQuery : IRequest<Delivery>
+    public class GetDeliveriesQuery : IRequest<(IReadOnlyList<Delivery>, int)>
     {
         public required Guid? EventId { get; init; }
         public required Guid? SubscriberId { get; init; }
