@@ -1,0 +1,11 @@
+@WebhookService.API_HostAddress = http://localhost:5056
+
+POST {{WebhookService.API_HostAddress}}/api/subscribers
+Content-Type: application/json
+
+{
+  "tenantId": "tenant-001",
+  "webhookUrl": "https://example.com/webhook-listener",
+  "eventTypes": ["user.created","payment.received"]
+}
+
