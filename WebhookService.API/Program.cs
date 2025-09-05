@@ -3,6 +3,7 @@ using WebhookService.API.Models.Inputs;
 using WebhookService.Appliaction.Dtos;
 using WebhookService.Appliaction.Extensions;
 using WebhookService.Domain.Entities;
+using WebhookService.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddInfraServices(builder.Configuration);
 
 builder.Services.RegisterApplication();
 

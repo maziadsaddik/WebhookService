@@ -18,6 +18,8 @@ namespace WebhookService.Infrastructure.Extensions
             services.AddSingleton<ICryptoService>(provider =>
                 new CryptoService(configuration["Security:MasterKey"]!));
 
+            services.AddHttpClient();
+
             services.AddScoped<IWebhookDispatcher, WebhookDispatcher>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
