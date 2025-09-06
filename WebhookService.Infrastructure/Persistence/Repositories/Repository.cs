@@ -54,5 +54,7 @@ namespace WebhookService.Infrastructure.Persistence.Repositories
         public virtual async Task<IEnumerable<TResult>> GetAllAsync<TResult>(Expression<Func<TEntity, TResult>> target, CancellationToken cancellationToken) => await dbContext.Set<TEntity>().AsNoTracking()
                                                      .Select(target)
                                                      .ToListAsync(cancellationToken);
+        public virtual async Task CanConnectAsync()
+            => await dbContext.Database.CanConnectAsync();
     }
 }

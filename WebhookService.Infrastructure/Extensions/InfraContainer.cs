@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 using WebhookService.Appliaction.Contract;
 using WebhookService.Appliaction.Contract.IRepositories;
 using WebhookService.Infrastructure.Persistence;
@@ -17,6 +18,13 @@ namespace WebhookService.Infrastructure.Extensions
 
             services.AddSingleton<ICryptoService>(provider =>
                 new CryptoService(configuration["Security:MasterKey"]!));
+
+            var redisConnectionString = configuration.GetConnectionString("Redis");
+            if (string.IsNullOrEmpty(redisConnectionString))
+                throw new InvalidOperationException("Redis connection string is not configured.");
+
+            services.AddSingleton<IConnectionMultiplexer>(
+                ConnectionMultiplexer.Connect(redisConnectionString));
 
             services.AddHttpClient();
 

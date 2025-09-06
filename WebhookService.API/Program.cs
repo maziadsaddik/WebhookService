@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Prometheus;
+using System.Text;
 using WebhookService.API.Models.Inputs;
 using WebhookService.Appliaction.Dtos;
 using WebhookService.Appliaction.Extensions;
@@ -29,7 +31,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+//Metrics
+var eventCounter = Metrics.CreateCounter("swr_events_total", "Total events received");
 
+var deliveryCounter = Metrics.CreateCounter("swr_deliveries_total", "Total deliveries", new[] { "status" });
+
+var retryCounter = Metrics.CreateCounter("swr_retries_total", "Total retries");
+
+var deliveryLatency = Metrics.CreateHistogram("swr_delivery_latency_ms", "Delivery latency in ms");
+
+//Api 
 app.MapPost("/api/subscribers", async ([FromBody] CreateSubscriberInput input, IMediator mediator, CancellationToken cancellationToken) =>
 {
     CreateSubscriberCommand command = new()
@@ -53,7 +64,9 @@ app.MapPost("/api/subscribers/{id}/rotate-secret", async (
 ) =>
 {
     RotateSecretCommand command = new() { Id = id };
+
     Subscriber subscriber = await mediator.Send(command, cancellationToken);
+
     return Results.Ok(new { message = "Secret rotated successfully" });
 })
  .WithName("Rotate secret")
@@ -75,9 +88,10 @@ app.MapPost("/api/events", async (
     [FromBody] IngestEventInput input,
     [FromHeader(Name = "X-Idempotency-Key")] string idempotencyKey,
     IMediator mediator,
-    CancellationToken cancellationToken) =>
+    CancellationToken cancellationToken
+) =>
 {
-
+    eventCounter.Inc();
     IngestEventCommand command = new()
     {
         TenantId = input.TenantId,
@@ -85,11 +99,10 @@ app.MapPost("/api/events", async (
         Payload = input.Payload,
         IdempotencyKey = idempotencyKey
     };
+
     string eventId = await mediator.Send(command, cancellationToken);
+
     return Results.Created($"/api/events/{eventId}", new { id = eventId });
-    // eventCounter.Inc();
-    // var evt = await service.IngestAsync(request, idempotencyKey);
-    //return Results.Created($"/api/events/{evt.Id}", new { id = evt.Id });
 })
  .WithName("Ingest event")
  .WithOpenApi();
@@ -117,9 +130,30 @@ app.MapGet("/api/deliveries", async (
     var (deliveries, totalPage) = await mediator.Send(query, cancellationToken);
 
     return Results.Ok(new { items = deliveries, totalPage = totalPage, pageSize = pageSize, currentPage });
+})
+ .WithName("Delivery logs")
+ .WithOpenApi();
+
+//Health check
+app.MapGet("/health", async (IMediator mediator, CancellationToken cancellation) =>
+{
+    string status = await mediator.Send(new HealthQuery(), cancellation);
+
+    return status == "healthy" ? Results.Ok(new { status = status }) : Results.StatusCode(503);
 });
 
 
+// Metrics endpoint
+app.MapGet("/metrics", () =>
+{
+    using var stream = new MemoryStream();
+
+    Metrics.DefaultRegistry.CollectAndExportAsTextAsync(stream);
+
+    return Results.Text(Encoding.UTF8.GetString(stream.ToArray()), "text/plain");
+})
+ .WithName("Prometheus metrics")
+ .WithOpenApi();
 
 app.Run();
 

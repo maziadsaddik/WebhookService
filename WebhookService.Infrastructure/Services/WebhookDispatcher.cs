@@ -26,7 +26,7 @@ namespace WebhookService.Infrastructure.Services
 
         public async Task<DeliveryResult> DispatchAsync(
             Subscriber subscriber,
-            Event evt,
+            Event @event,
             Delivery delivery
         )
         {
@@ -36,14 +36,14 @@ namespace WebhookService.Infrastructure.Services
             {
                 var request = new HttpRequestMessage(HttpMethod.Post, subscriber.EndpointUrl);
 
-                request.Content = new StringContent(evt.Payload, Encoding.UTF8, "application/json");
+                request.Content = new StringContent(@event.Payload, Encoding.UTF8, "application/json");
 
                 // Add security headers
                 var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-                var bodyHash = ComputeSHA256Hash(evt.Payload);
+                var bodyHash = ComputeSHA256Hash(@event.Payload);
 
-                var signaturePayload = $"v1:{timestamp}:{evt.Id}:{bodyHash}";
+                var signaturePayload = $"v1:{timestamp}:{@event.Id}:{bodyHash}";
 
                 var secret = _cryptoService.Decrypt(subscriber.EncryptedSecret);
 
@@ -54,7 +54,7 @@ namespace WebhookService.Infrastructure.Services
                     $"v1,ts={timestamp},kid={subscriber.KeyId},sig={signature}"
                 );
 
-                request.Headers.Add("X-SWR-Event-Id", evt.Id.ToString());
+                request.Headers.Add("X-SWR-Event-Id", @event.Id.ToString());
 
                 HttpResponseMessage response = await _httpClient.SendAsync(request);
 

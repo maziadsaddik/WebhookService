@@ -18,4 +18,6 @@ public interface IRepository<TEntity, TId> where TEntity : IEntity<TId>
     Task DeleteRangeAsync(IReadOnlyList<TEntity> entities, CancellationToken cancellationToken);
 
     Task<IEnumerable<TResult>> GetAllAsync<TResult>(Expression<Func<TEntity, TResult>> target, CancellationToken cancellationToken);
+
+    Task CanConnectAsync();
 }
