@@ -12,7 +12,7 @@ using WebhookService.Infrastructure.Persistence;
 namespace WebhookService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250905185820_InitDataBase")]
+    [Migration("20250906171629_InitDataBase")]
     partial class InitDataBase
     {
         /// <inheritdoc />
@@ -36,8 +36,14 @@ namespace WebhookService.Infrastructure.Persistence.Migrations
                     b.Property<int>("AttemptNumber")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("DeliveredAt")
+                    b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("DurationMs")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("ErrorMessage")
                         .IsRequired()
@@ -46,19 +52,19 @@ namespace WebhookService.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("EventId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("FailedAt")
+                    b.Property<int?>("HttpStatusCode")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("NextRetryAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ResponseBody")
+                    b.Property<string>("ResponseStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("StatusCode")
-                        .HasColumnType("int");
 
                     b.Property<Guid>("SubscriberId")
                         .HasColumnType("uniqueidentifier");
@@ -77,6 +83,10 @@ namespace WebhookService.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DedupKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EventType")
                         .IsRequired()

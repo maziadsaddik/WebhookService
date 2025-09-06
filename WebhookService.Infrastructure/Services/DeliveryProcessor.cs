@@ -12,7 +12,7 @@ namespace WebhookService.Infrastructure.Services
     public class DeliveryProcessor(
         IServiceProvider serviceProvider,
         ILogger<DeliveryProcessor> logger,
-        IWebhookDispatcher dispatcher
+        IServiceScopeFactory scopeFactory
     ) : BackgroundService
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -72,38 +72,43 @@ namespace WebhookService.Infrastructure.Services
                 return;
             }
 
-            var result = await dispatcher.DispatchAsync(
-                delivery.Subscriber,
-                delivery.Event,
-                delivery);
-
-            if (result.Success)
+            using (var scope = scopeFactory.CreateScope())
             {
-                delivery.MarkAsSuccess(result.HttpStatusCode ?? 0, result.DurationMs);
+                var dispatcher = scope.ServiceProvider.GetRequiredService<IWebhookDispatcher>();
 
-                logger.LogInformation(
-                    "Delivery succeeded: {DeliveryId} after {Attempts} attempts",
-                    delivery.Id, delivery.AttemptNumber
+                var result = await dispatcher.DispatchAsync(
+                    delivery.Subscriber,
+                    delivery.Event,
+                    delivery
                 );
-            }
-            else
-            {
-                if (delivery.AttemptNumber >= 5)
+                if (result.Success)
                 {
-                    delivery.MarkAsDlq(result.ErrorMessage);
+                    delivery.MarkAsSuccess(result.HttpStatusCode ?? 0, result.DurationMs);
 
-                    logger.LogWarning(
-                        "Delivery moved to DLQ: {DeliveryId} after {Attempts} attempts",
+                    logger.LogInformation(
+                        "Delivery succeeded: {DeliveryId} after {Attempts} attempts",
                         delivery.Id, delivery.AttemptNumber
                     );
                 }
                 else
                 {
-                    delivery.MarkAsFailed(result.ErrorMessage, CalculateNextRetry(delivery.AttemptNumber));
+                    if (delivery.AttemptNumber >= 5)
+                    {
+                        delivery.MarkAsDlq(result.ErrorMessage);
 
-                    logger.LogInformation(
-                        "Delivery failed: {DeliveryId}, retry at {NextRetry}",
-                        delivery.Id, delivery.NextRetryAt);
+                        logger.LogWarning(
+                            "Delivery moved to DLQ: {DeliveryId} after {Attempts} attempts",
+                            delivery.Id, delivery.AttemptNumber
+                        );
+                    }
+                    else
+                    {
+                        delivery.MarkAsFailed(result.ErrorMessage, CalculateNextRetry(delivery.AttemptNumber));
+
+                        logger.LogInformation(
+                            "Delivery failed: {DeliveryId}, retry at {NextRetry}",
+                            delivery.Id, delivery.NextRetryAt);
+                    }
                 }
             }
         }

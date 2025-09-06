@@ -18,13 +18,19 @@ namespace WebhookService.Infrastructure.Extensions
 
             services.AddSingleton<ICryptoService>(provider =>
                 new CryptoService(configuration["Security:MasterKey"]!));
+            var configOptions = new ConfigurationOptions
+            {
+                EndPoints = { "localhost:6379" },
+                AbortOnConnectFail = false
+            };
 
-            var redisConnectionString = configuration.GetConnectionString("Redis");
-            if (string.IsNullOrEmpty(redisConnectionString))
-                throw new InvalidOperationException("Redis connection string is not configured.");
+            //var redisConnectionString = configuration.GetConnectionString("Redis");
+            //if (string.IsNullOrEmpty(redisConnectionString))
+            //    throw new InvalidOperationException("Redis connection string is not configured.");
 
-            services.AddSingleton<IConnectionMultiplexer>(
-                ConnectionMultiplexer.Connect(redisConnectionString));
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(configOptions));
+
+            //ConnectionMultiplexer.Connect(redisConnectionString));
 
             services.AddHttpClient();
 

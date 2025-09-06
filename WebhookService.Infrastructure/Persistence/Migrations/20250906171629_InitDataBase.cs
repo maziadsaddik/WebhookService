@@ -19,6 +19,7 @@ namespace WebhookService.Infrastructure.Persistence.Migrations
                     EventType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TenantId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Payload = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DedupKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ReceivedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -53,13 +54,15 @@ namespace WebhookService.Infrastructure.Persistence.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     EventId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SubscriberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AttemptNumber = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StatusCode = table.Column<int>(type: "int", nullable: false),
-                    ResponseBody = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DeliveredAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    FailedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ErrorMessage = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    AttemptNumber = table.Column<int>(type: "int", nullable: false),
+                    NextRetryAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ResponseStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ErrorMessage = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    HttpStatusCode = table.Column<int>(type: "int", nullable: true),
+                    DurationMs = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
