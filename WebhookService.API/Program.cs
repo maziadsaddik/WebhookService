@@ -113,7 +113,7 @@ app.MapPost("/api/events", async (
 app.MapGet("/api/deliveries", async (
     [FromQuery] Guid? eventId,
     [FromQuery] Guid? subscriberId,
-    [FromQuery] string status,
+    [FromQuery] string? status,
     IMediator mediator,
     CancellationToken cancellationToken,
     [FromQuery] int currentPage = 1,
