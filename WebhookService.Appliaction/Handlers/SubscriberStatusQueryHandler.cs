@@ -1,12 +1,11 @@
 ﻿using MediatR;
-using StackExchange.Redis;
 using WebhookService.Appliaction.Contract.IRepositories;
 using WebhookService.Appliaction.Dtos;
 using WebhookService.Domain.Enums;
 
 namespace WebhookService.Appliaction.Handlers
 {
-    public class SubscriberStatusQueryHandler(IUnitOfWork unitOfWork, IConnectionMultiplexer redis) : IRequestHandler<SubscriberStatusQuery, object>
+    public class SubscriberStatusQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<SubscriberStatusQuery, object>
     {
         public async Task<object> Handle(SubscriberStatusQuery query, CancellationToken cancellationToken)
         {

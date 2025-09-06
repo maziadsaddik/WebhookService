@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using StackExchange.Redis;
 using WebhookService.Appliaction.Contract;
 using WebhookService.Appliaction.Contract.IRepositories;
 using WebhookService.Appliaction.Dtos;
@@ -6,7 +7,7 @@ using WebhookService.Domain.Entities;
 
 namespace WebhookService.Appliaction.Handlers
 {
-    public class RotateSecretCommandHandler(IUnitOfWork unitOfWork, ICryptoService cryptoService) : IRequestHandler<RotateSecretCommand, Subscriber>
+    public class RotateSecretCommandHandler(IUnitOfWork unitOfWork, ICryptoService cryptoService, IConnectionMultiplexer redis) : IRequestHandler<RotateSecretCommand, Subscriber>
     {
         public async Task<Subscriber> Handle(RotateSecretCommand command, CancellationToken cancellationToken)
         {
@@ -21,7 +22,16 @@ namespace WebhookService.Appliaction.Handlers
 
             await unitOfWork.SaveChangeAsync(cancellationToken);
 
+            //await InvalidateCacheAsync(subscriber.TenantId);
+
             return subscriber;
+        }
+
+        private async Task InvalidateCacheAsync(string tenantId)
+        {
+            var db = redis.GetDatabase();
+
+            await db.KeyDeleteAsync($"subs:{tenantId}");
         }
     }
 }
