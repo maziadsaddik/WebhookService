@@ -72,16 +72,18 @@ app.MapPost("/api/subscribers/{id}/rotate-secret", async (
  .WithName("Rotate secret")
  .WithOpenApi();
 
-// Get subscriber status
-//app.MapGet("/api/subscribers/{id}/status", async (
-//    Guid id,
-//    ISubscriberService service) =>
-//{
-//    var status = await service.GetStatusAsync(id);
-//    return Results.Ok(status);
-//})
-// .WithName("Subscriber status")
-// .WithOpenApi();
+//Get subscriber status
+app.MapGet("/api/subscribers/{id}/status", async (
+   Guid id,
+   IMediator mediator,
+   CancellationToken cancellationToken
+) =>
+{
+    var status = await mediator.Send(new SubscriberStatusQuery { Id = id }, cancellationToken);
+    return Results.Ok(status);
+})
+ .WithName("Subscriber status")
+ .WithOpenApi();
 
 // Ingest event
 app.MapPost("/api/events", async (

@@ -9,6 +9,10 @@ namespace WebhookService.Infrastructure.Persistence.Repositories
     {
         private readonly AppDbContext _dbContext = dbContext;
 
+        public async Task<Subscriber?> GetSubscriberById(Guid id, CancellationToken cancellationToken) => await _dbContext.Subscribers
+                .Include(s => s.Deliveries)
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+
         public async Task<IReadOnlyList<Subscriber>> GetSubscribersByTenantIdAsync(
             string tenantId,
             CancellationToken cancellationToken
