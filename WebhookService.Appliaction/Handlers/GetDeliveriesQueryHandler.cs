@@ -11,7 +11,7 @@ namespace WebhookService.Appliaction.Handlers
         {
             return await unitOfWork.DeliveryRepository.GetDeliveriesWithPaginationAsync(
                 query: query,
-                cancellationToken
+                cancellationToken: cancellationToken
             );
         }
     }

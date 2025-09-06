@@ -1,70 +1,56 @@
 ﻿using MediatR;
-using WebhookService.Appliaction.Contract;
+using System.Text.Json;
 using WebhookService.Appliaction.Contract.IRepositories;
 using WebhookService.Appliaction.Dtos;
+using WebhookService.Domain.Entities;
 
 namespace WebhookService.Appliaction.Handlers
 {
-    public class IngestEventCommandHandler(IUnitOfWork unitOfWork, ICryptoService cryptoService) : IRequestHandler<IngestEventCommand, string>
+    public class IngestEventCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<IngestEventCommand, string>
     {
         public async Task<string> Handle(IngestEventCommand command, CancellationToken cancellationToken)
         {
-            //    var dedupKey = !string.IsNullOrEmpty(command.IdempotencyKey)
-            //        ? command.IdempotencyKey
-            //        : $"{command.TenantId}:{command.EventType}:{Guid.NewGuid()}";
+            var dedupKey = !string.IsNullOrEmpty(command.IdempotencyKey)
+                ? command.IdempotencyKey
+                : $"{command.TenantId}:{command.EventType}:{Guid.NewGuid()}";
 
-            //    // Check for duplicate
-            //    var existingEvent = await unitOfWork.EventRepository
-            //        .FirstOrDefaultAsync(e => e.DedupKey == dedupKey);
+            // Check for duplicate
+            var existingEvent = await unitOfWork.EventRepository
+                .IsDuplicateAsync(dedupKey, cancellationToken);
 
-            //    if (existingEvent != null)
-            //    {
-            //        _logger.LogInformation("Duplicate event detected: {DedupKey}", dedupKey);
-            //        return existingEvent;
-            //    }
+            if (existingEvent)
+                return $"Duplicate event detected: {dedupKey}";
 
-            //    var evt = new Event
-            //    {
-            //        Id = Guid.NewGuid(),
-            //        TenantId = request.TenantId,
-            //        EventType = request.EventType,
-            //        Payload = JsonSerializer.Serialize(request.Payload),
-            //        DedupKey = dedupKey,
-            //        CreatedAt = DateTime.UtcNow
-            //    };
+            var @event = Event.Add(
+                    dedupKey: dedupKey,
+                    tenantId: command.TenantId,
+                    eventType: command.EventType,
+                    payload: JsonSerializer.Serialize(command.Payload)
+            );
 
-            //    _db.Events.Add(evt);
+            await unitOfWork.EventRepository.InsertAsync(@event, cancellationToken);
 
             //    // Find matching subscribers
             //    var subscribers = await GetMatchingSubscribersAsync(
             //        request.TenantId,
             //        request.EventType);
 
-            //    // Create deliveries
-            //    foreach (var subscriber in subscribers)
-            //    {
-            //        var delivery = new Delivery
-            //        {
-            //            Id = Guid.NewGuid(),
-            //            EventId = evt.Id,
-            //            SubscriberId = subscriber.Id,
-            //            Status = "PENDING",
-            //            AttemptNumber = 0,
-            //            CreatedAt = DateTime.UtcNow
-            //        };
-            //        _db.Deliveries.Add(delivery);
-            //    }
+            var subscribers = new List<Subscriber>();
 
-            //    await _db.SaveChangesAsync();
+            // Create deliveries
+            foreach (var subscriber in subscribers)
+            {
+                await unitOfWork.DeliveryRepository.InsertAsync(
+                    Delivery.CreatePending(
+                        eventId: @event.Id,
+                        subscriberId: subscriber.Id
+                    ), cancellationToken
+                );
+            }
 
-            //    _logger.LogInformation(
-            //        "Event ingested: {EventId} with {DeliveryCount} deliveries",
-            //        evt.Id, subscribers.Count);
+            await unitOfWork.SaveChangeAsync(cancellationToken);
 
-            //    return evt;
-
-
-            return string.Empty;
+            return $"Event ingested: {@event.Id} with {subscribers.Count} deliveries ";
         }
 
         //private async Task<List<Subscriber>> GetMatchingSubscribersAsync(
