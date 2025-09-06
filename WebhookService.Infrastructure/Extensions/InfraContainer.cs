@@ -21,7 +21,7 @@ namespace WebhookService.Infrastructure.Extensions
             var configOptions = new ConfigurationOptions
             {
                 EndPoints = { "localhost:6379" },
-                AbortOnConnectFail = false
+                //AbortOnConnectFail = false
             };
 
             //var redisConnectionString = configuration.GetConnectionString("Redis");

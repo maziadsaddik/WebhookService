@@ -22,7 +22,7 @@ namespace WebhookService.Appliaction.Handlers
 
             await unitOfWork.SaveChangeAsync(cancellationToken);
 
-            //await InvalidateCacheAsync(subscriber.TenantId);
+            await InvalidateCacheAsync(subscriber.TenantId);
 
             return subscriber;
         }

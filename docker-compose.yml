@@ -1,0 +1,6 @@
+services:
+  webhookservice.api:
+    image: ${DOCKER_REGISTRY-}webhookserviceapi
+    build:
+      context: .
+      dockerfile: WebhookService.API/Dockerfile

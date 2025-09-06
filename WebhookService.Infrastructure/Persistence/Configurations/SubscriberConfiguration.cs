@@ -11,13 +11,16 @@ namespace WebhookService.Infrastructure.Persistence.Configurations
         {
 
             builder.HasKey(e => e.Id);
+
             builder.HasIndex(e => e.TenantId);
+
             builder.HasIndex(e => new { e.TenantId, e.IsActive });
+
             builder.Property(e => e.EventTypes)
-                    .HasConversion(
-                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
-                        v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null)
-                    );
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
+            );
         }
     }
 }
