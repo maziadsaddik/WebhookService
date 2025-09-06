@@ -59,5 +59,29 @@
                 createdAt: DateTime.UtcNow,
                 completedAt: null
             );
+
+        public void MarkAsFailed(string errorMessage, DateTime? nextRetryAt)
+        {
+            Status = nameof(Enums.Status.Failed);
+            ErrorMessage = errorMessage;
+            NextRetryAt = nextRetryAt;
+        }
+
+        public void MarkAsSuccess(int httpStatusCode, long durationMs)
+        {
+            Status = nameof(Enums.Status.Success);
+            HttpStatusCode = httpStatusCode;
+            DurationMs = durationMs;
+            CompletedAt = DateTime.UtcNow;
+        }
+
+        public void MarkAsDlq(string errorMessage)
+        {
+            Status = nameof(Enums.Status.Dlq);
+            ErrorMessage = errorMessage;
+            CompletedAt = DateTime.UtcNow;
+        }
+
+        public void IncrementAttempt() => AttemptNumber++;
     }
 }

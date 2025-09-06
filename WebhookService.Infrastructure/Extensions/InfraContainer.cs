@@ -24,6 +24,8 @@ namespace WebhookService.Infrastructure.Extensions
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+            services.AddHostedService<DeliveryProcessor>();
+
             services.AddHostedService<DatabaseMigrationHostedService>();
 
             return services;

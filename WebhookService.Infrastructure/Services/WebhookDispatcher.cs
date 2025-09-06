@@ -27,28 +27,37 @@ namespace WebhookService.Infrastructure.Services
         public async Task<DeliveryResult> DispatchAsync(
             Subscriber subscriber,
             Event evt,
-            Delivery delivery)
+            Delivery delivery
+        )
         {
-            var stopwatch = Stopwatch.StartNew();
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Post, subscriber.EndpointUrl);
+
                 request.Content = new StringContent(evt.Payload, Encoding.UTF8, "application/json");
 
                 // Add security headers
                 var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
                 var bodyHash = ComputeSHA256Hash(evt.Payload);
+
                 var signaturePayload = $"v1:{timestamp}:{evt.Id}:{bodyHash}";
 
                 var secret = _cryptoService.Decrypt(subscriber.EncryptedSecret);
+
                 var signature = _cryptoService.ComputeSignature(secret, signaturePayload);
 
-                request.Headers.Add("X-SWR-Signature",
-                    $"v1,ts={timestamp},kid={subscriber.KeyId},sig={signature}");
+                request.Headers.Add(
+                    "X-SWR-Signature",
+                    $"v1,ts={timestamp},kid={subscriber.KeyId},sig={signature}"
+                );
+
                 request.Headers.Add("X-SWR-Event-Id", evt.Id.ToString());
 
-                var response = await _httpClient.SendAsync(request);
+                HttpResponseMessage response = await _httpClient.SendAsync(request);
+
                 stopwatch.Stop();
 
                 return new DeliveryResult
@@ -61,6 +70,7 @@ namespace WebhookService.Infrastructure.Services
             catch (TaskCanceledException)
             {
                 stopwatch.Stop();
+
                 return new DeliveryResult
                 {
                     Success = false,
@@ -71,7 +81,9 @@ namespace WebhookService.Infrastructure.Services
             catch (Exception ex)
             {
                 stopwatch.Stop();
+
                 _logger.LogError(ex, "Failed to dispatch webhook");
+
                 return new DeliveryResult
                 {
                     Success = false,
@@ -84,7 +96,9 @@ namespace WebhookService.Infrastructure.Services
         private string ComputeSHA256Hash(string input)
         {
             using var sha256 = System.Security.Cryptography.SHA256.Create();
-            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input.ToLower()));
+
+            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input.ToLower()));
+
             return BitConverter.ToString(bytes).Replace("-", "").ToLower();
         }
     }
