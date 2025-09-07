@@ -8,11 +8,14 @@ services:
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=WebhookDB;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True
       - ConnectionStrings__Redis=redis:6379
       - Security__MasterKey=your-256-bit-base64-encoded-key-here
+      - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - sqlserver
       - redis
     networks:
       - webhook-network
+    ports:
+      - "8080:80" # Expose API port for local access
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
