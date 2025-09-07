@@ -1,9 +1,63 @@
-@WebhookService.API_HostAddress = http://localhost:5056
+### Webhook Service Endpoints
 
+@WebhookService.API_HostAddress = http://localhost:5056
+@subscriberId = 28c3f64b-87f7-4516-bb25-08dded7fe451
+@eventId = 67890
+@idempotencyKey = {{generate.uuid}}
+
+---
+
+### 1. Create a new subscriber
 POST {{WebhookService.API_HostAddress}}/api/subscribers
 Content-Type: application/json
+
 {
   "tenantId": "tenant-001",
   "webhookUrl": "https://example.com/webhook-listener",
-  "eventTypes": ["user.created","payment.received"]
+  "eventTypes": [
+    "user.created",
+    "payment.received"
+  ]
 }
+
+---
+
+### 2. Rotate a subscriber's secret
+POST {{WebhookService.API_HostAddress}}/api/subscribers/{{subscriberId}}/rotate-secret
+
+---
+
+### 3. Get a subscriber's status
+GET {{WebhookService.API_HostAddress}}/api/subscribers/{{subscriberId}}/status
+
+---
+
+### 4. Ingest an event
+POST {{WebhookService.API_HostAddress}}/api/events
+Content-Type: application/json
+X-Idempotency-Key: {{idempotencyKey}}
+
+{
+  "tenantId": "tenant-001",
+  "eventType": "user.created",
+  "payload": {
+    "userId": "user-123",
+    "username": "testuser"
+  }
+}
+
+---
+
+### 5. Get delivery logs
+GET {{WebhookService.API_HostAddress}}/api/deliveries?eventId={{eventId}}&subscriberId={{subscriberId}}&status=delivered&currentPage=1&pageSize=20
+
+---
+
+### 6. Health check
+GET {{WebhookService.API_HostAddress}}/health
+
+---
+
+### 7. Prometheus metrics
+GET {{WebhookService.API_HostAddress}}/metrics
+Accept: text/plain
