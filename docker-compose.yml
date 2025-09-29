@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: WebhookService.API/Dockerfile
     environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=WebhookDB;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True
+      - ConnectionStrings__Database=Server=sqlserver;Database=WebhookDB;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True
       - ConnectionStrings__Redis=redis:6379
       - Security__MasterKey=your-256-bit-base64-encoded-key-here
       - ASPNETCORE_ENVIRONMENT=Development
